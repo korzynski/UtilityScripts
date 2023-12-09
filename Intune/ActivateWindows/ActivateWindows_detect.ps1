@@ -13,16 +13,10 @@
 
 $windowsProduct = Get-WmiObject SoftwareLicensingProduct -Filter "partialproductkey is not null" | Where-Object {$_.ApplicationID -eq '55c92734-d682-4d71-983e-d6ec3f16059f'}
 
-if {$windowsProduct.LicenseStatus -eq '1'){
-	$productKeyChannel = $windowsProduct.ProductKeyChannel
- 	if ("OEM:DM", "Retail" -contains $productKeyChannel){
- 		write-host "Correct ProductKeyChannel found = "$productKeyChannel""
-   		exit 0
-   	} else {
-    		write-host "ERROR: Wrong ProductKeyChannel found =  "$productKeyChannel""
-      		exit 1
-      	}
+if ($windowsProduct.LicenseStatus -eq '1'){
+	write-host "Activated - ProductKeyChannel $($windowsProduct.ProductKeyChannel)"
+    exit 0
 } else {
-	write-host "ERROR: Not activated"
- 	exit 2
+	write-host "Not activated"
+ 	exit 1
 }
