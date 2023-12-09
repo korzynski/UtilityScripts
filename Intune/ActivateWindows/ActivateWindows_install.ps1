@@ -25,7 +25,7 @@ try {
 #Get firmware-embedded product key
 try {
     $EmbeddedKey=$service.OA3xOriginalProductKey
-    write-host "Firmware-embedded product key is "$EmbeddedKey""
+    write-host "Firmware-embedded product key: $EmbeddedKey"
 } catch {
     write-host "ERROR: Failed to retrieve firmware-embedded product key"
     Exit 2
@@ -33,7 +33,7 @@ try {
 
 #Install embedded key
 try {
-    $service.installproductkey("$EmbeddedKey")
+    $service.installproductkey($EmbeddedKey)
     write-host "Installed license key"
 } catch {
     write-host "ERROR: Changing license key failed"
@@ -44,25 +44,28 @@ try {
 try {
     $service.RefreshLicenseStatus()
     $windowsProduct | get-ciminstance #refresh product attributes
-    if {$windowsProduct.LicenseStatus -eq '1'){ 
-    	write-host "Windows activated"
+    if ($windowsProduct.LicenseStatus -eq '1'){ 
+    	write-host "Activated - ProductKeyChannel $($windowsProduct.ProductKeyChannel)"
+     	exit 0
      } else {
-     	throw "Not activated"
+     	throw "Activation failed"
+      	exit 4
       }
 } catch {
-    write-host "ERROR: Windows could not be activated."
-    Exit 4
+    write-host "ERROR: Unable to verify activation"
+    Exit 5
 }
 
-#Check Product Key Channel
+<# Don't care about the product key channel as long as it's activated
+# Check Product Key Channel
 $getreg = Get-WmiObject SoftwareLicensingProduct -Filter "partialproductkey is not null" | Where-Object {$_.ApplicationID -eq '55c92734-d682-4d71-983e-d6ec3f16059f' -and $_.LicenseStatus -eq '1'}
 $ProductKeyChannel=$getreg.ProductKeyChannel
     if ($getreg.ProductKeyChannel -eq "OEM:DM") {
-        write-host "Windows activated, ProductKeyChannel = "$ProductKeyChannel""
+        write-host "Windows activated, ProductKeyChannel = $ProductKeyChannel"
 		Exit 0
     } else {
-		write-host "ERROR: Windows could not be activated. "$ProductKeyChannel""
+		write-host "ERROR: Wrong ProductKeyChannel: $ProductKeyChannel"
 		Exit 5
     }
-
+#>
 Stop-Transcript
